@@ -1,0 +1,122 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_Template_LAModule_name": {
+            "defaultValue": "Template-LAModule",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_Template_LAModule_name')]",
+            "location": "uksouth",
+            "properties": {
+                "state": "Disabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "triggers": {
+                        "manual": {
+                            "type": "Request",
+                            "kind": "Http",
+                            "inputs": {
+                                "schema": {
+                                    "properties": {
+                                        "Drop Down": {
+                                            "default": "item 1",
+                                            "enum": [
+                                                "item 1",
+                                                "item 2",
+                                                "item 3"
+                                            ],
+                                            "type": "string"
+                                        },
+                                        "JSON object for input": {
+                                            "description": "must be a json object",
+                                            "type": "object"
+                                        },
+                                        "String input": {
+                                            "type": "string"
+                                        },
+                                        "Yes No option": {
+                                            "default": false,
+                                            "type": "boolean"
+                                        }
+                                    },
+                                    "required": [
+                                        "Drop Down"
+                                    ],
+                                    "type": "object"
+                                }
+                            },
+                            "conditions": []
+                        }
+                    },
+                    "actions": {
+                        "Initialize_variable": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "test",
+                                        "type": "string",
+                                        "value": "I RAN!\n\nHere is the string you gave me:@{triggerBody()?['body']?['String input']} \nin the drop down you picked:@{triggerBody()?['body']?['Drop down']}\nyou said @{if(triggerBody()?['body']?['Drop down'],'Yes','No')}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Initialize_variable_2": {
+                            "runAfter": {
+                                "Initialize_variable": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "JSON object",
+                                        "type": "string",
+                                        "value": "{\"item1\":\"value 1\", \"array1\":[{\"array item 1\":\"array value 1\"},{\"array item 2\":\"array value 2\"}]}"
+                                    }
+                                ]
+                            }
+                        },
+                        "Response": {
+                            "runAfter": {
+                                "Initialize_variable_2": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Response",
+                            "kind": "Http",
+                            "inputs": {
+                                "body": {
+                                    "Response Text": "@{variables('test')}"
+                                },
+                                "schema": {
+                                    "properties": {
+                                        "Response Text": {
+                                            "description": "This is the actual response text",
+                                            "type": "string"
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "statusCode": 200
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {}
+            }
+        }
+    ]
+}
